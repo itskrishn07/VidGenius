@@ -1,0 +1,77 @@
+.env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs and local files
+*.log
+logs/
+
+# Environment files
+*.env
+.env.*
+
+# Generated files
+*.sqlite3
+*.db
+vector_db
+downloades
+
+# Ignore sensitive credentials and secrets
+secret*
+
+# Ignore other editor/project files
+*.swp
+*~
+
+# Node dependencies if any
+node_modules/
+
+# Misc
+coverage/
