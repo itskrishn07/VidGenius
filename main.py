@@ -1,65 +1,71 @@
-from dotenv import load_dotenv
-from utils.audio_processor import process_input
-from core.transcriber import transcribe_all
-from core.summarizer import summarize, generate_title
-from core.extractor import extract_action_items, extract_key_decisions, extract_questions
-from core.rag_engine import build_rag_chain, ask_question
+import tempfile
+from services import AudioService, TranscriptionService, AnalysisService, RAGService
+from models import PipelineResult
 
 
-load_dotenv()
+def run_pipeline(source: str, language: str = "english") -> PipelineResult:
+    """Runs the full analysis pipeline using temporary file management."""
+    print("🚀 Starting VidGenius AI Video Assistant Pipeline...")
 
-def run_pipeline(source :str, language :str = "english") -> dict:
-    print("starting AI Video Assistant")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        print("🔊 Processing media source (downloading/converting & chunking)...")
+        chunks = AudioService.process_source(source, temp_dir)
 
-    chunks = process_input(source)
+        print(f"📝 Transcribing audio ({len(chunks)} chunk(s)) using {language.upper()} engine...")
+        transcript = TranscriptionService.transcribe_all(chunks, language=language, temp_dir=temp_dir)
 
-    transcript = transcribe_all(chunks,language)
-    print(f"raw transcription (first 300 characters ) {transcript[:300]}")
+    print(f"✅ Raw transcript generated ({len(transcript)} characters).")
 
-    title = generate_title(transcript)
+    print("🏷️ Generating session title...")
+    title = AnalysisService.generate_title(transcript)
 
-    summary = summarize(transcript)
+    print("📋 Generating Map-Reduce summary...")
+    summary = AnalysisService.summarize(transcript)
 
-    action_item = extract_action_items(transcript)
+    print("🔍 Extracting action items, key decisions, and open questions...")
+    action_items = AnalysisService.extract_action_items(transcript)
+    decisions = AnalysisService.extract_key_decisions(transcript)
+    questions = AnalysisService.extract_questions(transcript)
 
-    decisions = extract_key_decisions(transcript)
-    questions = extract_questions(transcript)
-    
-    rag_chain = build_rag_chain(transcript)
+    print("🧠 Building RAG vector store with Mistral AI Embeddings...")
+    rag_chain = RAGService.build_rag_chain(transcript)
 
-    return {
-        "title": title,
-        "transcript": transcript,
-        "summary": summary,
-        "action_items": action_item,
-        "key_decisions": decisions,
-        "open_questions": questions,
-        "rag_chain": rag_chain,
-    }
+    return PipelineResult(
+        title=title,
+        transcript=transcript,
+        summary=summary,
+        action_items=action_items,
+        key_decisions=decisions,
+        open_questions=questions,
+        rag_chain=rag_chain
+    )
+
 
 if __name__ == "__main__":
-    # CLI entry point
-    source = input("Enter YouTube URL or local file path: ").strip()
-    language = input("Language (english/hinglish): ").strip() or "english"
-    result = run_pipeline(source, language)
+    source_input = input("Enter YouTube URL or local file path: ").strip()
+    language_input = input("Language (english/hinglish) [default: english]: ").strip() or "english"
+
+    if not source_input:
+        print("❌ Error: Media source path/URL cannot be empty.")
+        exit(1)
+
+    result = run_pipeline(source_input, language_input)
 
     print("\n" + "=" * 60)
-    print(f"📌 Title: {result['title']}")
-    print(f"\n📋 Summary:\n{result['summary']}")
-    print(f"\n✅ Action Items:\n{result['action_items']}")
-    print(f"\n🔑 Key Decisions:\n{result['key_decisions']}")
-    print(f"\n❓ Open Questions:\n{result['open_questions']}")
+    print(f"📌 TITLE: {result.title}")
+    print(f"\n📋 SUMMARY:\n{result.summary}")
+    print(f"\n✅ ACTION ITEMS:\n{result.action_items}")
+    print(f"\n🔑 KEY DECISIONS:\n{result.key_decisions}")
+    print(f"\n❓ OPEN QUESTIONS:\n{result.open_questions}")
     print("=" * 60)
 
-    # Phase 2 — Chat with your meeting via RAG
-    print("\n💬 Chat with your meeting (type 'exit' to quit)\n")
-    rag_chain = result["rag_chain"]
+    print("\n💬 Chat with your meeting recording (type 'exit' to quit)\n")
     while True:
-        question = input("You: ").strip()
-        if question.lower() in ["exit", "quit", "q"]:
+        user_q = input("You: ").strip()
+        if user_q.lower() in ["exit", "quit", "q"]:
             print("👋 Goodbye!")
             break
-        if not question:
+        if not user_q:
             continue
-        answer = ask_question(rag_chain, question)
+        answer = RAGService.ask_question(result.rag_chain, user_q)
         print(f"\n🤖 Assistant: {answer}\n")
