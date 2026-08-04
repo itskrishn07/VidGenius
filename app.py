@@ -7,7 +7,7 @@ from ui import inject_custom_css, render_step_bar
 
 # ─── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="VidGenius — AI Video Assistant",
+    page_title="VidGenius",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -28,7 +28,7 @@ for key, default in {
 
 # ─── Sidebar Controls ─────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="hero-title" style="font-size:1.6rem">🎬 AI<br>Video</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title" style="font-size:1.6rem">🎬 VidGenius</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Meeting Intelligence</div>', unsafe_allow_html=True)
     st.markdown("---")
 
@@ -57,8 +57,9 @@ with st.sidebar:
             render_step_bar(label, step, icon, st.session_state.pipeline_steps)
 
 # ─── Main View Header ────────────────────────────────────────────────────────
-st.markdown('<div class="hero-title">AI Video Assistant</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">VidGenius</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">Transcribe · Summarise · Chat with your media</div>', unsafe_allow_html=True)
+
 st.markdown("---")
 
 # ─── Pipeline Execution ───────────────────────────────────────────────────────

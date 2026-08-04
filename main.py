@@ -5,7 +5,7 @@ from models import PipelineResult
 
 def run_pipeline(source: str, language: str = "english") -> PipelineResult:
     """Runs the full analysis pipeline using temporary file management."""
-    print("🚀 Starting VidGenius AI Video Assistant Pipeline...")
+    print("🚀 Starting VidGenius Pipeline...")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         print("🔊 Processing media source (downloading/converting & chunking)...")
