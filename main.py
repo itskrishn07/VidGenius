@@ -65,7 +65,5 @@ if __name__ == "__main__":
             break
         if not user_q:
             continue
-        print("\n🤖 Assistant: ", end="", flush=True)
-        for chunk in RAGService.stream_question(result.rag_chain, user_q):
-            print(chunk, end="", flush=True)
-        print("\n")
+        answer = RAGService.ask_question(result.rag_chain, user_q)
+        print(f"\n🤖 Assistant: {answer}\n")

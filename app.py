@@ -3,7 +3,7 @@ import tempfile
 import time
 from services import AudioService, TranscriptionService, AnalysisService, RAGService
 from models import PipelineResult
-from ui import inject_custom_css, render_step_bar
+from ui import inject_custom_css, render_step_bar, render_sidebar_status
 
 # ─── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
@@ -43,18 +43,13 @@ with st.sidebar:
 
     run_btn = st.button("⚡  Analyse", use_container_width=True)
 
-    if st.session_state.pipeline_done:
-        st.markdown("---")
-        st.markdown('<span class="badge badge-green">Pipeline Status</span>', unsafe_allow_html=True)
-        for step, icon, label in [
-            ("audio",      "🔊", "Audio Acquisition"),
-            ("transcript", "📝", "Transcription"),
-            ("title",      "🏷️", "Title Generation"),
-            ("summary",    "📋", "Summarisation"),
-            ("extract",    "🔍", "Insight Extraction"),
-            ("rag",        "🧠", "RAG Vector Store"),
-        ]:
-            render_step_bar(label, step, icon, st.session_state.pipeline_steps)
+    sidebar_status_container = st.empty()
+    if st.session_state.pipeline_steps:
+        render_sidebar_status(
+            sidebar_status_container,
+            st.session_state.pipeline_steps,
+            is_done=st.session_state.pipeline_done
+        )
 
 # ─── Main View Header ────────────────────────────────────────────────────────
 st.markdown('<div class="hero-title">VidGenius</div>', unsafe_allow_html=True)
@@ -76,6 +71,11 @@ if run_btn:
 
         def set_step(k, v):
             st.session_state.pipeline_steps[k] = v
+            render_sidebar_status(
+                sidebar_status_container,
+                st.session_state.pipeline_steps,
+                is_done=False
+            )
 
         try:
             with progress_placeholder.container():
@@ -120,10 +120,15 @@ if run_btn:
 
             st.session_state.result = result_obj
             st.session_state.pipeline_done = True
+            render_sidebar_status(
+                sidebar_status_container,
+                st.session_state.pipeline_steps,
+                is_done=True
+            )
             progress_placeholder.success("✅ Media analysis complete!")
             time.sleep(0.4)
-            progress_placeholder.empty()
             st.rerun()
+
 
         except Exception as e:
             for k in ["audio", "transcript", "title", "summary", "extract", "rag"]:
@@ -218,16 +223,12 @@ if st.session_state.result:
         send_btn = st.button("Send →", use_container_width=True)
 
     if send_btn and user_query.strip():
-        query_text = user_query.strip()
-        st.session_state.chat_history.append({"role": "user", "content": query_text})
-
-        stream_box = st.empty()
-        with stream_box.container():
-            st.markdown('<div class="chat-msg" style="align-items:flex-start"><span class="chat-label bot-label">🤖 Assistant</span></div>', unsafe_allow_html=True)
-            answer = st.write_stream(RAGService.stream_question(res.rag_chain, query_text))
-
+        with st.spinner("Searching transcript context…"):
+            answer = RAGService.ask_question(res.rag_chain, user_query.strip())
+        st.session_state.chat_history.append({"role": "user", "content": user_query.strip()})
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
         st.rerun()
+
 
 
     if st.session_state.chat_history:

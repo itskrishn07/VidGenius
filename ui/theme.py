@@ -283,8 +283,18 @@ div[data-testid="stTextInput"] [data-testid="stInstructions"] {
 """, unsafe_allow_html=True)
 
 
+PIPELINE_STEPS_DEF = [
+    ("audio",      "🔊", "Audio Acquisition"),
+    ("transcript", "📝", "Transcription"),
+    ("title",      "🏷️", "Title Generation"),
+    ("summary",    "📋", "Summarisation"),
+    ("extract",    "🔍", "Insight Extraction"),
+    ("rag",        "🧠", "RAG Vector Store"),
+]
+
+
 def render_step_bar(label: str, key: str, icon: str, steps: dict):
-    """Renders pipeline step status indicators."""
+    """Renders individual pipeline step status bar."""
     s = steps.get(key, "pending")
     dot_css = "dot-active" if s == "active" else ("dot-done" if s == "done" else "dot-pending")
     st.markdown(f"""
@@ -292,3 +302,24 @@ def render_step_bar(label: str, key: str, icon: str, steps: dict):
         <div class="status-dot {dot_css}"></div>
         <span>{icon} {label}</span>
     </div>""", unsafe_allow_html=True)
+
+
+def render_sidebar_status(container, steps: dict, is_done: bool = False):
+    """Renders live real-time pipeline status panel inside a Streamlit container."""
+    with container.container():
+        st.markdown("---")
+        badge_cls = "badge-green" if is_done else "badge-purple"
+        badge_txt = "Pipeline Complete" if is_done else "Live Pipeline Progress"
+        st.markdown(f'<span class="badge {badge_cls}" style="margin-bottom:0.5rem;display:inline-block">{badge_txt}</span>', unsafe_allow_html=True)
+
+        html_bars = ""
+        for key, icon, label in PIPELINE_STEPS_DEF:
+            s = steps.get(key, "pending")
+            dot_css = "dot-active" if s == "active" else ("dot-done" if s == "done" else "dot-pending")
+            html_bars += f"""
+            <div class="status-bar">
+                <div class="status-dot {dot_css}"></div>
+                <span>{icon} {label}</span>
+            </div>"""
+        st.markdown(html_bars, unsafe_allow_html=True)
+

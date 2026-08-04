@@ -68,13 +68,17 @@ class AudioService:
     def process_source(cls, source: str, temp_dir: str) -> List[str]:
         """
         Main pipeline entry for audio preparation.
-        Converts/Downloads source media into temp_dir and returns list of chunk file paths.
+        Converts/Downloads source media into temp_dir, normalizes to 16kHz mono WAV,
+        and returns list of chunk file paths.
         """
         source = source.strip()
         if source.startswith("http://") or source.startswith("https://"):
-            wav_path = cls.download_youtube_audio(source, temp_dir)
+            raw_path = cls.download_youtube_audio(source, temp_dir)
         else:
-            wav_path = cls.convert_to_wav(source, temp_dir)
+            raw_path = source
 
+        # Always convert/normalize to 16kHz mono WAV (~3.8 MB per 2-min chunk)
+        wav_path = cls.convert_to_wav(raw_path, temp_dir)
         chunks = cls.chunk_audio(wav_path, temp_dir)
         return chunks
+
