@@ -1,5 +1,6 @@
 import os
 from typing import List, Optional
+import concurrent.futures
 import requests
 from pydub import AudioSegment
 from groq import Groq
@@ -82,19 +83,33 @@ class TranscriptionService:
 
     @classmethod
     def transcribe_all(cls, chunks: List[str], language: str = "english", temp_dir: str = None) -> str:
-        """Routes audio chunks to Whisper (English) or Sarvam AI (Hinglish) and aggregates full transcript."""
-        transcripts = []
+        """Routes audio chunks to Whisper (English) or Sarvam AI (Hinglish) with parallel execution."""
+        if not chunks:
+            return ""
+
         is_hinglish = language.lower() == "hinglish"
 
-        for chunk_path in chunks:
-            if is_hinglish:
+        if is_hinglish:
+            transcripts = []
+            for chunk_path in chunks:
                 if temp_dir is None:
                     temp_dir = os.path.dirname(chunk_path)
                 text = cls.transcribe_chunk_sarvam(chunk_path, temp_dir)
-            else:
-                text = cls.transcribe_chunk_whisper(chunk_path)
+                if text:
+                    transcripts.append(text.strip())
+            return " ".join(transcripts)
 
-            if text:
-                transcripts.append(text.strip())
+        # Parallel Cloud Whisper API requests for high speed
+        workers = min(len(chunks), 6)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_index = {
+                executor.submit(cls.transcribe_chunk_whisper, chunk_path): i
+                for i, chunk_path in enumerate(chunks)
+            }
+            results = [None] * len(chunks)
+            for future in concurrent.futures.as_completed(future_to_index):
+                idx = future_to_index[future]
+                results[idx] = future.result().strip()
 
-        return " ".join(transcripts)
+        return " ".join([r for r in results if r])
+

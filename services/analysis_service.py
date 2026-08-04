@@ -1,4 +1,5 @@
-from typing import List
+import concurrent.futures
+from typing import List, Tuple
 from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -41,7 +42,7 @@ class AnalysisService:
 
     @classmethod
     def summarize(cls, transcript: str) -> str:
-        """Performs Map-Reduce summarization over the transcript."""
+        """Performs parallel Map-Reduce summarization over the transcript."""
         llm = cls.get_llm(temperature=0.3)
         splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=200)
         chunks = splitter.split_text(transcript)
@@ -51,7 +52,13 @@ class AnalysisService:
             ("human", "{text}"),
         ])
         map_chain = map_prompt | llm | StrOutputParser()
-        chunk_summaries = [map_chain.invoke({"text": chunk}) for chunk in chunks]
+
+        # Run chunk map summaries in parallel
+        if len(chunks) > 1:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(chunks), 4)) as executor:
+                chunk_summaries = list(executor.map(lambda c: map_chain.invoke({"text": c}), chunks))
+        else:
+            chunk_summaries = [map_chain.invoke({"text": chunks[0]})]
 
         combined_text = "\n\n".join(chunk_summaries)
 
@@ -107,3 +114,18 @@ class AnalysisService:
             "Format as a numbered list. If none found say 'No open questions found.'"
         )
         return chain.invoke(transcript)
+
+    @classmethod
+    def extract_all_insights(cls, transcript: str) -> Tuple[str, str, str]:
+        """Extracts action items, key decisions, and open questions concurrently in parallel."""
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            future_actions = executor.submit(cls.extract_action_items, transcript)
+            future_decisions = executor.submit(cls.extract_key_decisions, transcript)
+            future_questions = executor.submit(cls.extract_questions, transcript)
+
+            action_items = future_actions.result()
+            decisions = future_decisions.result()
+            questions = future_questions.result()
+
+        return action_items, decisions, questions
+

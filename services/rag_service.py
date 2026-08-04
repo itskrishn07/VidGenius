@@ -93,3 +93,13 @@ Context from meeting transcript:
         if not question or not question.strip():
             return "Please provide a valid question."
         return rag_chain.invoke(question.strip())
+
+    @staticmethod
+    def stream_question(rag_chain, question: str):
+        """Streams RAG chain tokens for real-time response generation."""
+        if not question or not question.strip():
+            yield "Please provide a valid question."
+            return
+        for chunk in rag_chain.stream(question.strip()):
+            yield chunk
+

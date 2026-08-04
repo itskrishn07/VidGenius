@@ -101,9 +101,7 @@ if run_btn:
             set_step("summary", "done")
 
             set_step("extract", "active")
-            action_items = AnalysisService.extract_action_items(transcript)
-            decisions = AnalysisService.extract_key_decisions(transcript)
-            questions = AnalysisService.extract_questions(transcript)
+            action_items, decisions, questions = AnalysisService.extract_all_insights(transcript)
             set_step("extract", "done")
 
             set_step("rag", "active")
@@ -220,11 +218,17 @@ if st.session_state.result:
         send_btn = st.button("Send →", use_container_width=True)
 
     if send_btn and user_query.strip():
-        with st.spinner("Searching transcript context…"):
-            answer = RAGService.ask_question(res.rag_chain, user_query.strip())
-        st.session_state.chat_history.append({"role": "user", "content": user_query.strip()})
+        query_text = user_query.strip()
+        st.session_state.chat_history.append({"role": "user", "content": query_text})
+
+        stream_box = st.empty()
+        with stream_box.container():
+            st.markdown('<div class="chat-msg" style="align-items:flex-start"><span class="chat-label bot-label">🤖 Assistant</span></div>', unsafe_allow_html=True)
+            answer = st.write_stream(RAGService.stream_question(res.rag_chain, query_text))
+
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
         st.rerun()
+
 
     if st.session_state.chat_history:
         if st.button("🗑️ Clear Chat History", type="secondary"):

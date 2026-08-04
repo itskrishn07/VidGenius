@@ -22,10 +22,8 @@ def run_pipeline(source: str, language: str = "english") -> PipelineResult:
     print("📋 Generating Map-Reduce summary...")
     summary = AnalysisService.summarize(transcript)
 
-    print("🔍 Extracting action items, key decisions, and open questions...")
-    action_items = AnalysisService.extract_action_items(transcript)
-    decisions = AnalysisService.extract_key_decisions(transcript)
-    questions = AnalysisService.extract_questions(transcript)
+    print("🔍 Extracting action items, key decisions, and open questions (in parallel)...")
+    action_items, decisions, questions = AnalysisService.extract_all_insights(transcript)
 
     print("🧠 Building RAG vector store with Mistral AI Embeddings...")
     rag_chain = RAGService.build_rag_chain(transcript)
@@ -67,5 +65,7 @@ if __name__ == "__main__":
             break
         if not user_q:
             continue
-        answer = RAGService.ask_question(result.rag_chain, user_q)
-        print(f"\n🤖 Assistant: {answer}\n")
+        print("\n🤖 Assistant: ", end="", flush=True)
+        for chunk in RAGService.stream_question(result.rag_chain, user_q):
+            print(chunk, end="", flush=True)
+        print("\n")

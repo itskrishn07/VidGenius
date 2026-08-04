@@ -19,11 +19,12 @@ MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 
 # Audio Processing Settings
-AUDIO_CHUNK_MINUTES = int(os.getenv("AUDIO_CHUNK_MINUTES", "1"))
+AUDIO_CHUNK_MINUTES = int(os.getenv("AUDIO_CHUNK_MINUTES", "5"))
 SARVAM_PIECE_SECONDS = int(os.getenv("SARVAM_PIECE_SECONDS", "25"))
 AUDIO_SAMPLE_RATE = 16000
 
 # RAG & Vector Store Settings
-RAG_CHUNK_SIZE = int(os.getenv("RAG_CHUNK_SIZE", "500"))
-RAG_CHUNK_OVERLAP = int(os.getenv("RAG_CHUNK_OVERLAP", "50"))
+RAG_CHUNK_SIZE = int(os.getenv("RAG_CHUNK_SIZE", "800"))
+RAG_CHUNK_OVERLAP = int(os.getenv("RAG_CHUNK_OVERLAP", "80"))
 RAG_TOP_K = int(os.getenv("RAG_TOP_K", "4"))
+
