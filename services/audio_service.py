@@ -25,6 +25,15 @@ class AudioService:
             ],
             "quiet": True,
             "no_warnings": True,
+            "nocheckcertificate": True,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "web"],
+                }
+            },
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            },
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -32,6 +41,7 @@ class AudioService:
             # Correct extension post-processor replacement
             wav_path = os.path.splitext(filename)[0] + ".wav"
         return wav_path
+
 
     @staticmethod
     def convert_to_wav(input_path: str, output_dir: str) -> str:
