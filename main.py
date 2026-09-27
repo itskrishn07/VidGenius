@@ -25,7 +25,7 @@ def run_pipeline(source: str, language: str = "english") -> PipelineResult:
     print("🔍 Extracting action items, key decisions, and open questions (in parallel)...")
     action_items, decisions, questions = AnalysisService.extract_all_insights(transcript)
 
-    print("🧠 Building RAG vector store with Mistral AI Embeddings...")
+    print("🧠 Building RAG vector store with Google AI Embeddings...")
     rag_chain = RAGService.build_rag_chain(transcript)
 
     return PipelineResult(

@@ -30,7 +30,7 @@ try:
     action_items = AnalysisService.extract_action_items(transcript)
     print(f"   ✓ Action Items extracted.")
 
-    print("\n4. Testing RAG Service (Mistral AI Embeddings)...")
+    print("\n4. Testing RAG Service (Google AI Embeddings)...")
     rag_chain = RAGService.build_rag_chain(transcript)
     test_answer = RAGService.ask_question(rag_chain, "What is the main topic discussed?")
     print(f"   ✓ RAG Answer: {test_answer[:150]}...")

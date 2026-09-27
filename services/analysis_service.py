@@ -1,6 +1,6 @@
 import concurrent.futures
 from typing import List, Tuple
-from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -14,13 +14,14 @@ class AnalysisService:
     _llm = None
 
     @classmethod
-    def get_llm(cls, temperature: float = 0.3) -> ChatMistralAI:
-        if not config.MISTRAL_API_KEY:
-            raise ValueError("MISTRAL_API_KEY is not set in environment or .env file.")
-        return ChatMistralAI(
-            model=config.MISTRAL_MODEL,
-            mistral_api_key=config.MISTRAL_API_KEY,
-            temperature=temperature
+    def get_llm(cls, temperature: float = 0.3) -> ChatGoogleGenerativeAI:
+        if not config.GOOGLE_API_KEY:
+            raise ValueError("GOOGLE_API_KEY is not set in environment or .env file.")
+        return ChatGoogleGenerativeAI(
+            model=config.GEMINI_MODEL,
+            google_api_key=config.GOOGLE_API_KEY,
+            temperature=temperature,
+            max_retries=6
         )
 
     @classmethod
@@ -117,15 +118,9 @@ class AnalysisService:
 
     @classmethod
     def extract_all_insights(cls, transcript: str) -> Tuple[str, str, str]:
-        """Extracts action items, key decisions, and open questions concurrently in parallel."""
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            future_actions = executor.submit(cls.extract_action_items, transcript)
-            future_decisions = executor.submit(cls.extract_key_decisions, transcript)
-            future_questions = executor.submit(cls.extract_questions, transcript)
-
-            action_items = future_actions.result()
-            decisions = future_decisions.result()
-            questions = future_questions.result()
-
+        """Extracts action items, key decisions, and open questions sequentially with rate-limit tolerance."""
+        action_items = cls.extract_action_items(transcript)
+        decisions = cls.extract_key_decisions(transcript)
+        questions = cls.extract_questions(transcript)
         return action_items, decisions, questions
 

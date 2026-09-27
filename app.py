@@ -134,7 +134,15 @@ if run_btn:
             for k in ["audio", "transcript", "title", "summary", "extract", "rag"]:
                 if st.session_state.pipeline_steps.get(k) == "active":
                     st.session_state.pipeline_steps[k] = "pending"
-            progress_placeholder.error(f"❌ Pipeline Error: {e}")
+            err_msg = str(e)
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "Quota exceeded" in err_msg:
+                progress_placeholder.error(
+                    "⏳ **Gemini Free Tier Quota Limit Reached (429 Rate Limit)**\n\n"
+                    "Google Gemini Free Tier limits requests to 5 per minute per model. "
+                    "Please wait 10-15 seconds and click **⚡ Analyse** again to resume."
+                )
+            else:
+                progress_placeholder.error(f"❌ Pipeline Error: {e}")
 
 # ─── Render Results Dashboard ──────────────────────────────────────────────────
 if st.session_state.result:
@@ -249,7 +257,7 @@ else:
         </div>
         <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
             <span class="badge badge-purple">Groq Whisper</span>
-            <span class="badge badge-cyan">Mistral AI Summaries</span>
-            <span class="badge badge-green">Mistral Embeddings RAG</span>
+            <span class="badge badge-cyan">Google AI Summaries</span>
+            <span class="badge badge-green">Google Embeddings RAG</span>
         </div>
     </div>""", unsafe_allow_html=True)

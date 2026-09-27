@@ -5,7 +5,7 @@ groq
 langchain
 langchain-core
 langchain-community
-langchain-mistralai
+langchain-google-genai
 langchain-chroma
 chromadb
 streamlit

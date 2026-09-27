@@ -9,13 +9,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # API Models Configuration
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "whisper-large-v3-turbo")
-MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "mistral-small-latest")
-MISTRAL_EMBED_MODEL = os.getenv("MISTRAL_EMBED_MODEL", "mistral-embed")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/text-embedding-004")
 SARVAM_MODEL = os.getenv("SARVAM_STT_MODEL", "saaras:v2.5")
 
 # API Keys
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 
 # Audio Processing Settings
